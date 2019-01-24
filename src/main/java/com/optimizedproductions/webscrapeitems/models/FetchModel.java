@@ -14,9 +14,9 @@ public class FetchModel implements Serializable {
 
 	private @Singular Set<String> sources;
 
-	private String itemSelector;
+	private Selector itemSelector;
 
-	private String nextButtonSelector;
+	private Selector nextButtonSelector;
 
 	private @Singular List<FieldGetter> fields;
 

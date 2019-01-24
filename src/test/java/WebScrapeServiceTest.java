@@ -1,8 +1,5 @@
 import com.optimizedproductions.webscrapeitems.WebScrapeService;
-import com.optimizedproductions.webscrapeitems.models.CancelIfModel;
-import com.optimizedproductions.webscrapeitems.models.FetchModel;
-import com.optimizedproductions.webscrapeitems.models.FieldGetter;
-import com.optimizedproductions.webscrapeitems.models.PostProcessModel;
+import com.optimizedproductions.webscrapeitems.models.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -22,22 +19,26 @@ public class WebScrapeServiceTest {
 
 		Set<CarModel> cars = webScrapeService.fetchAllItemsFrom(FetchModel.builder()
 						.sources(sources)
-						.itemSelector(".inventoryList .item")
-						.nextButtonSelector("a[rel='next']:not(.disabled)")
+						.itemSelector(Selector.builder().selector(".inventoryList .item").build())
+						.nextButtonSelector(Selector.builder().selector("a[rel='next']:not(.disabled)").build())
 						.field(FieldGetter.builder()
 								.fieldName("title")
-								.selector("a.url")
+								//.selector(Selector.builder().selector("a.url").build())
+								.selector(Selector.builder().selector("//a[@class=\"url\"]").type(Selector.TYPE_XPATH).build())
 								.getterMethod(FieldGetter.GETTER_METHOD_TEXT)
+								.postProcessModel(PostProcessModel.builder()
+										.type(PostProcessModel.TYPE_TRIM)
+										.build())
 								.build())
 						.field(FieldGetter.builder()
 								.fieldName("year")
-								.selector("div.hproduct")
+								.selector(Selector.builder().selector("div.hproduct").build())
 								.getterMethod(FieldGetter.GETTER_METHOD_ATTR)
 								.getterAttr("data-year")
 								.build())
 						.field(FieldGetter.builder()
 								.fieldName("photo")
-								.selector("div.media img")
+								.selector(Selector.builder().selector("div.media img").build())
 								.getterMethod(FieldGetter.GETTER_METHOD_ATTR)
 								.getterAttr("src")
 								.postProcessModel(PostProcessModel.builder()

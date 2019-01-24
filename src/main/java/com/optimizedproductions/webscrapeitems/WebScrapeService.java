@@ -4,20 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
-import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.optimizedproductions.webscrapeitems.models.CancelIfModel;
-import com.optimizedproductions.webscrapeitems.models.FetchModel;
-import com.optimizedproductions.webscrapeitems.models.FieldGetter;
-import com.optimizedproductions.webscrapeitems.models.PostProcessModel;
+import com.optimizedproductions.webscrapeitems.models.*;
 import com.optimizedproductions.webscrapeitems.processing.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class WebScrapeService {
 
@@ -40,7 +33,12 @@ public class WebScrapeService {
 			boolean newPageLoaded = true;
 
 			while(newPageLoaded && page != null) {
-				DomNodeList<DomNode> nodes = page.querySelectorAll(fetchModel.getItemSelector());
+
+				if (!this.isValidSelector(fetchModel.getItemSelector())) {
+					break;
+				}
+				List<DomNode> nodes = this.applySelectorAll(fetchModel.getItemSelector(), page);
+
 				if (nodes != null) {
 					nodes.forEach(domNode -> {
 
@@ -58,9 +56,13 @@ public class WebScrapeService {
 				}
 
 				newPageLoaded = false;
-				DomNodeList<DomNode> nextButtons = page.querySelectorAll(fetchModel.getNextButtonSelector());
 
-				if (nextButtons != null && nextButtons.getLength() > 0) {
+				if (!this.isValidSelector(fetchModel.getNextButtonSelector())) {
+					break;
+				}
+				List<DomNode> nextButtons = this.applySelectorAll(fetchModel.getNextButtonSelector(), page);
+
+				if (nextButtons != null && nextButtons.size() > 0) {
 					HtmlElement nextLink = (HtmlElement) nextButtons.get(0);
 					page = nextLink.click();
 					newPageLoaded = true;
@@ -80,10 +82,14 @@ public class WebScrapeService {
 			return "";
 		}
 
-		if (getter.getSelector() == null || getter.getSelector().isEmpty()) {
+		if ( !this.isValidSelector(getter.getSelector()) ) {
 			targetNode = (HtmlElement) domNode;
 		}else {
-			targetNode = domNode.querySelector( getter.getSelector() );
+			targetNode = this.applySelector(getter.getSelector(), domNode);
+		}
+
+		if (targetNode == null) {
+			return "";
 		}
 
 		String field;
@@ -135,6 +141,42 @@ public class WebScrapeService {
 		}
 
 		return field;
+	}
+
+
+	private boolean isValidSelector(Selector selector) {
+		return selector != null
+				&& selector.getSelector() != null
+				&& !selector.getSelector().isEmpty()
+				&& (selector.getType() == Selector.TYPE_CSS
+				|| selector.getType() == Selector.TYPE_XPATH)
+				;
+	}
+
+	private HtmlElement applySelector(Selector selector, DomNode node) {
+		if (!this.isValidSelector(selector)) {
+			return null;
+		}
+		switch (selector.getType()) {
+			case Selector.TYPE_CSS:
+			default:
+				return node.querySelector(selector.getSelector());
+			case Selector.TYPE_XPATH:
+				return node.getFirstByXPath(selector.getSelector());
+		}
+	}
+
+	private List<DomNode> applySelectorAll(Selector selector, DomNode node) {
+		if (!this.isValidSelector(selector)) {
+			return null;
+		}
+		switch (selector.getType()) {
+			case Selector.TYPE_CSS:
+			default:
+				return node.querySelectorAll(selector.getSelector());
+			case Selector.TYPE_XPATH:
+				return node.getByXPath(selector.getSelector());
+		}
 	}
 
 	private void configureWebClient(WebClient webClient, FetchModel fetchModel) {

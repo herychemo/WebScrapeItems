@@ -17,7 +17,7 @@ public class FieldGetter implements Serializable {
 
 	private String fieldName;
 
-	private String selector;
+	private Selector selector;
 
 	private int getterMethod;
 
