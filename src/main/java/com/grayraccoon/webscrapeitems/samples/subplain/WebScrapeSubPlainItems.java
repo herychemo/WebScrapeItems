@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class WebScrapeSubPlainItems {
+class WebScrapeSubPlainItems {
 
     public static void main(String[] args) {
         StopWatch stopWatch = new StopWatch();

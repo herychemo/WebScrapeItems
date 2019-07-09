@@ -9,7 +9,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @EqualsAndHashCode
 @ToString
-public class CarModel {
+class CarModel {
 	private String title;
 	private String year;
 	private String photo;
