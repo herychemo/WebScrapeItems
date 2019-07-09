@@ -8,13 +8,98 @@ import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.grayraccoon.webscrapeitems.models.*;
 import com.grayraccoon.webscrapeitems.processing.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 
 public class WebScrapeService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(WebScrapeService.class);
+
 	private ObjectMapper objectMapper = new ObjectMapper();
+
+	public Map<String, Set<String>> fetchAllSubPlainItemsFrom(FetchModel fetchModel) {
+		Objects.requireNonNull(fetchModel.getMultiPlainFetchModels());
+
+		Map<String, Set<String>> allPlainObjects = new HashMap<>();
+
+		for (String source: fetchModel.getSources()) {
+
+			Map<String, Set<String>> sourcePlainObjects = fetchAllSubPlainItemsFrom(source, fetchModel);
+
+			for (BasicFetchModel basicFetchModel: fetchModel.getMultiPlainFetchModels()) {
+				final String currentKey = basicFetchModel.getPlainObjectName();
+				if (!allPlainObjects.containsKey(currentKey)) {
+					allPlainObjects.put(currentKey, new HashSet<>());
+				}
+				allPlainObjects.get(currentKey).addAll(
+						sourcePlainObjects.get(currentKey)
+				);
+			}
+		}
+
+		return allPlainObjects;
+	}
+
+	public Map<String, Set<String>> fetchAllSubPlainItemsFrom(String source, FetchModel fetchModel) {
+		Map<String, Set<String>> sourcePlainObjects = new HashMap<>();
+
+		try (final WebClient webClient = new WebClient()) {
+			this.configureWebClient(webClient, fetchModel);
+
+			HtmlPage page = webClient.getPage(source);
+			boolean newPageLoaded = true;
+
+			while(newPageLoaded && page != null) {
+
+				for (final BasicFetchModel basicFetchModel : fetchModel.getMultiPlainFetchModels()) {
+					final String currentKey = basicFetchModel.getPlainObjectName();
+
+					Set<String> foundItems = new HashSet<>();
+
+					if (!this.isValidSelector(basicFetchModel.getItemSelector())) {
+						break;
+					}
+					List<DomNode> nodes = this.applySelectorAll(basicFetchModel.getItemSelector(), page);
+
+					if (nodes != null) {
+						nodes.forEach(domNode -> {
+							String plainValueStr = this.applyFieldGetter(domNode, basicFetchModel.getSinglePlainObject());
+							foundItems.add(plainValueStr);
+						});
+					}
+
+					if (!sourcePlainObjects.containsKey(currentKey)) {
+						sourcePlainObjects.put(currentKey, new HashSet<>());
+					}
+					sourcePlainObjects.get(currentKey).addAll(foundItems);
+				}
+
+				page = tryToLoadNextPage(fetchModel, page);
+				newPageLoaded = page != null;
+			}
+
+		} catch (IOException e) {
+			LOGGER.error("There was an error with the WebClient: ", e);
+		}
+
+		return sourcePlainObjects;
+	}
+
+	private HtmlPage tryToLoadNextPage(FetchModel fetchModel, HtmlPage page) throws IOException {
+		if (!this.isValidSelector(fetchModel.getNextButtonSelector())) {
+			return null;
+		}
+		List<DomNode> nextButtons = this.applySelectorAll(fetchModel.getNextButtonSelector(), page);
+
+		if (nextButtons != null && nextButtons.size() > 0) {
+			HtmlElement nextLink = (HtmlElement) nextButtons.get(0);
+			return nextLink.click();
+		}
+		return null;
+	}
 
 	public <T> Set<T> fetchAllItemsFrom(FetchModel fetchModel, Class<T> typeKey) {
 		Set<T> allItems = new HashSet<>();
@@ -25,7 +110,7 @@ public class WebScrapeService {
 	}
 
 	public <T> Set<T> fetchAllItemsFrom(String source, FetchModel fetchModel, Class<T> typeKey) {
-		Set<T> sourcesList = new HashSet<>();
+		Set<T> foundItems = new HashSet<>();
 		try (final WebClient webClient = new WebClient()) {
 			this.configureWebClient(webClient, fetchModel);
 
@@ -41,10 +126,10 @@ public class WebScrapeService {
 
 				if (nodes != null) {
 					nodes.forEach(domNode -> {
-						if (fetchModel.getPlainObject() != null) {
-							String plainValueStr = this.applyFieldGetter(domNode, fetchModel.getPlainObject());
+						if (fetchModel.getSinglePlainObject() != null) {
+							String plainValueStr = this.applyFieldGetter(domNode, fetchModel.getSinglePlainObject());
 							final T plainValue = objectMapper.convertValue(plainValueStr, typeKey);
-							sourcesList.add(plainValue);
+							foundItems.add(plainValue);
 						} else {
 							Objects.requireNonNull(fetchModel.getFields());
 							Map<String, String> itemMap = new HashMap<>();
@@ -55,30 +140,20 @@ public class WebScrapeService {
 
 							T item = objectMapper.convertValue(itemMap, typeKey);
 							if  (item != null) {
-								sourcesList.add(item);
+								foundItems.add(item);
 							}
 						}
 					});
 				}
 
-				newPageLoaded = false;
-
-				if (!this.isValidSelector(fetchModel.getNextButtonSelector())) {
-					break;
-				}
-				List<DomNode> nextButtons = this.applySelectorAll(fetchModel.getNextButtonSelector(), page);
-
-				if (nextButtons != null && nextButtons.size() > 0) {
-					HtmlElement nextLink = (HtmlElement) nextButtons.get(0);
-					page = nextLink.click();
-					newPageLoaded = true;
-				}
+				page = tryToLoadNextPage(fetchModel, page);
+				newPageLoaded = page != null;
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("There was an error with the WebClient: ", e);
 		}
-		return sourcesList;
+		return foundItems;
 	}
 
 	private String applyFieldGetter(DomNode domNode, FieldGetter getter) {
@@ -123,8 +198,11 @@ public class WebScrapeService {
 				case PostProcessModel.TYPE_SPLIT:
 					postProcess = new SplitPostProcess(postProcessModel.getArguments());
 					break;
-					default:
-						continue;
+				case PostProcessModel.TYPE_REMOVE:
+					postProcess = new RemovePostProcess(postProcessModel.getArguments());
+					break;
+				default:
+					continue;
 			}
 			field = postProcess.postProcess(field);
 		}

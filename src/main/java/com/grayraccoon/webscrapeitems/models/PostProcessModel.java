@@ -13,6 +13,7 @@ public class PostProcessModel implements Serializable {
 
 	public static final int TYPE_TRIM = 1;
 	public static final int TYPE_SPLIT = 2;
+	public static final int TYPE_REMOVE = 3;
 
 	private int type;
 

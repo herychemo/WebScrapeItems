@@ -1,7 +1,6 @@
 package com.grayraccoon.webscrapeitems.models;
 
 import lombok.*;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -9,18 +8,20 @@ import java.util.Set;
 @Getter
 @Builder
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode()
 public class FetchModel implements Serializable {
 
-	private @Singular Set<String> sources;
-
 	private Selector itemSelector;
+
+	private FieldGetter singlePlainObject;
+
+	private @Singular Set<String> sources;
 
 	private Selector nextButtonSelector;
 
 	private @Singular List<FieldGetter> fields;
 
-	private FieldGetter plainObject;
+	private @Singular List<BasicFetchModel> multiPlainFetchModels;
 
 	private boolean usingJavascript;
 
