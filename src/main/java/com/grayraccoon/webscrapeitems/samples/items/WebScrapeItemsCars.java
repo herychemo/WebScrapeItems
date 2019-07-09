@@ -1,6 +1,6 @@
 package com.grayraccoon.webscrapeitems.samples.items;
 
-import com.grayraccoon.webscrapeitems.WebScrapeService;
+import com.grayraccoon.webscrapeitems.WebScrapeServiceImpl;
 import com.grayraccoon.webscrapeitems.models.*;
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -21,12 +21,12 @@ public class WebScrapeItemsCars {
 	}
 
 	public void fetchAllItemsFromCecilToyota() {
-		WebScrapeService webScrapeService = new WebScrapeService();
+		WebScrapeServiceImpl webScrapeServiceImpl = new WebScrapeServiceImpl();
 		List<String> sources = new ArrayList<>();
 		sources.add("https://www.ceciltoyota.com/new-inventory/index.htm");
 		sources.add("https://www.ceciltoyota.com/used-inventory/index.htm");
 
-		Set<CarModel> cars = webScrapeService.fetchAllItemsFrom(FetchModel.builder()
+		Set<CarModel> cars = webScrapeServiceImpl.fetchAllItemsFrom(FetchModel.builder()
 						.sources(sources)
 						.itemSelector(Selector.builder().selector(".inventoryList .item").build())
 						.nextButtonSelector(Selector.builder().selector("a[rel='next']:not(.disabled)").build())

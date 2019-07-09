@@ -21,7 +21,7 @@ public class FetchModel implements Serializable {
 
 	private @Singular List<FieldGetter> fields;
 
-	private @Singular List<BasicFetchModel> multiPlainFetchModels;
+	private @Singular List<BasicFetchModel> plainFetchModels;
 
 	private boolean usingJavascript;
 

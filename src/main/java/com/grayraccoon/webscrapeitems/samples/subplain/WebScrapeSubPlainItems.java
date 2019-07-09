@@ -1,6 +1,6 @@
 package com.grayraccoon.webscrapeitems.samples.subplain;
 
-import com.grayraccoon.webscrapeitems.WebScrapeService;
+import com.grayraccoon.webscrapeitems.WebScrapeServiceImpl;
 import com.grayraccoon.webscrapeitems.models.*;
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -21,14 +21,14 @@ public class WebScrapeSubPlainItems {
     }
 
     public void fetchSomeCarNames() {
-        WebScrapeService webScrapeService = new WebScrapeService();
+        WebScrapeServiceImpl webScrapeServiceImpl = new WebScrapeServiceImpl();
         List<String> sources = new ArrayList<>();
         sources.add("https://www.ancira.com/searchall.aspx");
 
         Map<String, Set<String>> allSubPlainItems =
-                webScrapeService.fetchAllSubPlainItemsFrom(FetchModel.builder()
+                webScrapeServiceImpl.fetchAllSubPlainItemsFrom(FetchModel.builder()
                         .sources(sources)
-                        .multiPlainFetchModel(BasicFetchModel.builder()
+                        .plainFetchModel(BasicFetchModel.builder()
                                 .plainObjectName("carTitles")
                                 .itemSelector(Selector.builder().selector(".vehicleTitleContainer span").build())
                                 .singlePlainObject(FieldGetter.builder()
@@ -38,7 +38,7 @@ public class WebScrapeSubPlainItems {
                                                 .build())
                                         .build())
                                 .build())
-                        .multiPlainFetchModel(BasicFetchModel.builder()
+                        .plainFetchModel(BasicFetchModel.builder()
                                 .plainObjectName("features")
                                 .itemSelector(Selector.builder().selector("#collapse-Features input[name='Features']").build())
                                 .singlePlainObject(FieldGetter.builder()
@@ -53,7 +53,7 @@ public class WebScrapeSubPlainItems {
                                                 .build())
                                         .build())
                                 .build())
-                        .multiPlainFetchModel(BasicFetchModel.builder()
+                        .plainFetchModel(BasicFetchModel.builder()
                                 .plainObjectName("priceRanges")
                                 .itemSelector(Selector.builder().selector("#collapse-PriceRange input[name='Pricerange']").build())
                                 .singlePlainObject(FieldGetter.builder()
