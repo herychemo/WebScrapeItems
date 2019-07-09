@@ -1,8 +1,6 @@
-package com.optimizedproductions.webscrapeitems.models;
+package com.grayraccoon.webscrapeitems.models;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.List;
@@ -10,6 +8,8 @@ import java.util.Set;
 
 @Getter
 @Builder
+@ToString
+@EqualsAndHashCode
 public class FetchModel implements Serializable {
 
 	private @Singular Set<String> sources;
@@ -19,6 +19,8 @@ public class FetchModel implements Serializable {
 	private Selector nextButtonSelector;
 
 	private @Singular List<FieldGetter> fields;
+
+	private FieldGetter plainObject;
 
 	private boolean usingJavascript;
 

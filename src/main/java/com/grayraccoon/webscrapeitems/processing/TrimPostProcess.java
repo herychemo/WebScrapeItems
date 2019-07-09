@@ -1,4 +1,4 @@
-package com.optimizedproductions.webscrapeitems.processing;
+package com.grayraccoon.webscrapeitems.processing;
 
 public class TrimPostProcess implements PostProcess {
 

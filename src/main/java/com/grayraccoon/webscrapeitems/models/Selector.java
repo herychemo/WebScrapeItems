@@ -1,4 +1,4 @@
-package com.optimizedproductions.webscrapeitems.models;
+package com.grayraccoon.webscrapeitems.models;
 
 import lombok.Builder;
 import lombok.Getter;

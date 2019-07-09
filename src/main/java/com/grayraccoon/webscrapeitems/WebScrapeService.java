@@ -1,4 +1,4 @@
-package com.optimizedproductions.webscrapeitems;
+package com.grayraccoon.webscrapeitems;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
@@ -6,8 +6,8 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.optimizedproductions.webscrapeitems.models.*;
-import com.optimizedproductions.webscrapeitems.processing.*;
+import com.grayraccoon.webscrapeitems.models.*;
+import com.grayraccoon.webscrapeitems.processing.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -41,16 +41,22 @@ public class WebScrapeService {
 
 				if (nodes != null) {
 					nodes.forEach(domNode -> {
+						if (fetchModel.getPlainObject() != null) {
+							String plainValueStr = this.applyFieldGetter(domNode, fetchModel.getPlainObject());
+							final T plainValue = objectMapper.convertValue(plainValueStr, typeKey);
+							sourcesList.add(plainValue);
+						} else {
+							Objects.requireNonNull(fetchModel.getFields());
+							Map<String, String> itemMap = new HashMap<>();
 
-						Map<String, String> itemMap = new HashMap<>();
+							for (FieldGetter getter: fetchModel.getFields()) {
+								itemMap.put(getter.getFieldName(), this.applyFieldGetter(domNode, getter));
+							}
 
-						for (FieldGetter getter: fetchModel.getFields()) {
-							itemMap.put(getter.getFieldName(), this.applyFieldGetter(domNode, getter));
-						}
-
-						T item = objectMapper.convertValue(itemMap, typeKey);
-						if  (item != null) {
-							sourcesList.add(item);
+							T item = objectMapper.convertValue(itemMap, typeKey);
+							if  (item != null) {
+								sourcesList.add(item);
+							}
 						}
 					});
 				}

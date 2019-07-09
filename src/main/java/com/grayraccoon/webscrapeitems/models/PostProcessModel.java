@@ -1,4 +1,4 @@
-package com.optimizedproductions.webscrapeitems.models;
+package com.grayraccoon.webscrapeitems.models;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -9,10 +9,10 @@ import java.util.List;
 
 @Getter
 @Builder
-public class CancelIfModel implements Serializable {
+public class PostProcessModel implements Serializable {
 
-	public static final int TYPE_CONTAINS_OR = 1;
-	public static final int TYPE_CONTAINS_AND = 2;
+	public static final int TYPE_TRIM = 1;
+	public static final int TYPE_SPLIT = 2;
 
 	private int type;
 

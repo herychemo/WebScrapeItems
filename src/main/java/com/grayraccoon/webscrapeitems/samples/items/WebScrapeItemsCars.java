@@ -1,17 +1,26 @@
-import com.optimizedproductions.webscrapeitems.WebScrapeService;
-import com.optimizedproductions.webscrapeitems.models.*;
-import org.junit.jupiter.api.Test;
+package com.grayraccoon.webscrapeitems.samples.items;
+
+import com.grayraccoon.webscrapeitems.WebScrapeService;
+import com.grayraccoon.webscrapeitems.models.*;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class WebScrapeServiceTest {
+public class WebScrapeItemsCars {
 
+	public static void main(String[] args) {
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		new WebScrapeItemsCars().fetchAllItemsFromCecilToyota();
+		stopWatch.stop();
+		System.out.print("All Items from of two pages took: ");
+		System.out.println(stopWatch.toString());
+	}
 
-	@Test
-	public void fetchAllItemsFromSuccess() {
+	public void fetchAllItemsFromCecilToyota() {
 		WebScrapeService webScrapeService = new WebScrapeService();
 		List<String> sources = new ArrayList<>();
 		sources.add("https://www.ceciltoyota.com/new-inventory/index.htm");
